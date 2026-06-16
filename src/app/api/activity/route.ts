@@ -1,31 +1,37 @@
 import connectDB from "@/lib/mongodb";
-import ActivityLog from "@/models/ActivityLog";
+import mongoose from "mongoose";
 
+// Simple inline schema definition to match your database collection
+const ActivitySchema = new mongoose.Schema({
+  action: String,
+  taskTitle: String,
+  from: String,
+  to: String,
+  createdAt: { type: Date, default: Date.now }
+}, { collection: 'activities' });
+
+const Activity = mongoose.models.Activity || mongoose.model("Activity", ActivitySchema);
+
+// GET: Fetch all logs
 export async function GET() {
-    try {
-        await connectDB();
-        const logs = await ActivityLog.find().sort({ createdAt: -1 }).limit(20);
-        return Response.json(logs);
-    } catch (error) {
-        console.log(error);
-        return Response.json(
-            { message: "Failed to fetch activity logs" },
-            { status: 500 }
-        );
-    }
+  try {
+    await connectDB();
+    const logs = await Activity.find().sort({ createdAt: -1 }).limit(30);
+    return Response.json(logs);
+  } catch (error) {
+    console.error("Error fetching logs:", error);
+    return Response.json({ message: "Failed to fetch logs" }, { status: 500 });
+  }
 }
 
-export async function POST(request: Request) {
-    try {
-        await connectDB();
-        const body = await request.json();
-        const log = await ActivityLog.create(body);
-        return Response.json(log, { status: 201 });
-    } catch (error) {
-        console.log(error);
-        return Response.json(
-            { message: "Failed to create activity log" },
-            { status: 500 }
-        );
-    }
+// DELETE: Wipe out previous logs to start fresh
+export async function DELETE() {
+  try {
+    await connectDB();
+    await Activity.deleteMany({}); // Clears all entries in the collection
+    return Response.json({ message: "Activity history cleared cleanly" });
+  } catch (error) {
+    console.error("Error clearing logs:", error);
+    return Response.json({ message: "Failed to clear activity log" }, { status: 500 });
+  }
 }

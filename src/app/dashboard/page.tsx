@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshingLogs, setRefreshingLogs] = useState(false);
 
   async function fetchTasks() {
     const response = await fetch("/api/tasks");
@@ -49,9 +50,16 @@ export default function Dashboard() {
   }
 
   async function fetchLogs() {
-    const response = await fetch("/api/activity");
-    const data = await response.json();
-    setLogs(Array.isArray(data) ? data : []);
+    setRefreshingLogs(true);
+    try {
+      const response = await fetch("/api/activity");
+      const data = await response.json();
+      setLogs(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching logs:", error);
+    } finally {
+      setTimeout(() => setRefreshingLogs(false), 400);
+    }
   }
 
   useEffect(() => {
@@ -77,6 +85,20 @@ export default function Dashboard() {
 
     fetchLogs();
   }
+
+  const handleClearAllLogs = async () => {
+    if (!confirm("Are you sure you want to clear all activity history? This cannot be undone.")) return;
+    try {
+      const res = await fetch("/api/activity", { method: "DELETE" });
+      if (res.ok) {
+        setLogs([]); // Immediately wipe from view state
+      } else {
+        alert("Failed to clear historical records.");
+      }
+    } catch (error) {
+      console.error("Error clearing feed records:", error);
+    }
+  };
 
   const getColumnTasks = (stage: string) => tasks.filter((t) => t.stage === stage);
 
@@ -213,7 +235,7 @@ export default function Dashboard() {
                                   }}
                                 >
                                   <TaskCard
-                                    id={task._id} // Added id here so TaskCard knows which item to delete
+                                    id={task._id}
                                     title={task.title}
                                     description={task.description}
                                     priority={task.priority}
@@ -234,16 +256,17 @@ export default function Dashboard() {
             </DragDropContext>
           )}
 
-          {/* Activity Feed */}
+          {/* Activity Feed Container */}
           <div style={{
-            width: "260px", flexShrink: 0,
+            width: "280px", flexShrink: 0,
             background: "rgba(255,255,255,0.02)",
             border: "1px solid rgba(255,255,255,0.06)",
             borderRadius: "20px", padding: "20px",
             height: "fit-content",
             backdropFilter: "blur(10px)",
           }}>
-            <h2 style={{ fontSize: "15px", fontWeight: 700, color: "white", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+            {/* Header Text */}
+            <h2 style={{ fontSize: "15px", fontWeight: 700, color: "white", display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
               <span style={{
                 width: "8px", height: "8px", background: "#10b981",
                 borderRadius: "50%", display: "inline-block",
@@ -251,14 +274,45 @@ export default function Dashboard() {
               }} />
               Activity Feed
             </h2>
+
+            {/* Custom Control Row (Refresh + Clear All Actions) */}
+            <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+              <button
+                onClick={fetchLogs}
+                disabled={refreshingLogs}
+                style={{
+                  flex: 1, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: "8px", color: "#9ca3af", fontSize: "12px", fontWeight: 600,
+                  padding: "6px 10px", cursor: "pointer", transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "white"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "#9ca3af"; }}
+              >
+                {refreshingLogs ? "⏳" : "🔄"} Refresh
+              </button>
+
+              <button
+                onClick={handleClearAllLogs}
+                style={{
+                  flex: 1, background: "rgba(239, 68, 68, 0.04)", border: "1px solid rgba(239, 68, 68, 0.15)",
+                  borderRadius: "8px", color: "#ef4444", fontSize: "12px", fontWeight: 600,
+                  padding: "6px 10px", cursor: "pointer", transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = "rgba(239, 68, 68, 0.12)"}
+                onMouseLeave={(e) => e.currentTarget.style.background = "rgba(239, 68, 68, 0.04)"}
+              >
+                🗑️ Clear All
+              </button>
+            </div>
+
             {logs.length === 0 ? (
-              <p style={{ color: "#374151", fontSize: "13px" }}>No activity yet</p>
+              <p style={{ color: "#4b5563", fontSize: "13px", textAlign: "center", padding: "20px 0" }}>No activity yet</p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "400px", overflowY: "auto", paddingRight: "4px" }}>
                 {logs.map((log) => (
                   <div key={log._id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", paddingBottom: "12px" }}>
-                    <p style={{ fontSize: "12px", color: "#d1d5db", lineHeight: 1.5 }}>{getLogMessage(log)}</p>
-                    <p style={{ fontSize: "11px", color: "#374151", marginTop: "4px" }}>{formatTime(log.createdAt)}</p>
+                    <p style={{ fontSize: "12px", color: "#d1d5db", lineHeight: 1.5, margin: 0 }}>{getLogMessage(log)}</p>
+                    <p style={{ fontSize: "11px", color: "#4b5563", marginTop: "4px", margin: "4px 0 0 0" }}>{formatTime(log.createdAt)}</p>
                   </div>
                 ))}
               </div>
