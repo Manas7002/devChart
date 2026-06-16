@@ -13,9 +13,14 @@ const TaskSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    completed: {
-        type: Boolean,
-        default: false,
+    stage: {
+        type: String,
+        enum: ["todo", "inprogress", "done"],
+        default: "todo",
+    },
+    dueDate: {
+        type: Date,
+        default: null,
     },
     createdAt: {
         type: Date,
@@ -24,5 +29,4 @@ const TaskSchema = new mongoose.Schema({
 });
 
 const Task = mongoose.models.Task || mongoose.model("Task", TaskSchema);
-
 export default Task;

@@ -1,27 +1,30 @@
-import Navbar from "@/components/Navbar"
-import TaskCard from "@/components/TaskCard";
-import connectDB from "@/lib/mongodb";
+import Navbar from "@/components/Navbar";
+import Link from "next/link";
 
-
-
-export default async function Home() {
-
-  await connectDB();
-
+export default function Home() {
   return (
-    <div>
+    <div className="min-h-screen bg-black text-white">
       <Navbar />
-      <div className="flex flex-wrap items-center justify-center  m-3">
-        <div className="max-w-xl">
-          <h1 className="text-9xl font-bold text-teal-200 mx-18 mt-18 text-outline-black">
-            devChart
-          </h1>
-          <div className="mx-18 font-medium text-2xl mt-5">
-            <h3>An easy tool for managing your tasks and collaborating with your team!!</h3>
-            <h2>Have a Nice Time Building...</h2>
-          </div>
+      <div className="flex flex-col items-center justify-center min-h-[90vh] text-center px-4">
+        <h1 className="text-9xl font-bold text-teal-200 mb-6">devChart</h1>
+        <p className="text-2xl font-medium text-gray-300 mb-4">
+          An easy tool for managing your tasks and collaborating with your team
+        </p>
+        <p className="text-lg text-gray-400 mb-10">Have a Nice Time Building...</p>
+        <div className="flex gap-4">
+          <Link
+            href="/dashboard"
+            className="bg-teal-400 text-black font-bold px-8 py-3 rounded-xl hover:bg-teal-300 transition"
+          >
+            Go to Dashboard
+          </Link>
+          <Link
+            href="/create-task"
+            className="border-2 border-teal-400 text-teal-400 font-bold px-8 py-3 rounded-xl hover:bg-teal-400 hover:text-black transition"
+          >
+            Create Task
+          </Link>
         </div>
-        <img src="/logo.svg" alt="Logo" className="w-xl h-auto mx-auto my-6" />
       </div>
     </div>
   );
