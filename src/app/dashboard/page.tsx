@@ -43,6 +43,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [hoveredCol, setHoveredCol] = useState<string | null>(null);
 
+  // Stats glassmorphic state tracker
+  const [hoveredStat, setHoveredStat] = useState<string | null>(null);
+
+  // Part 2: State buffer tracking the characters typed in the filter bar
+  const [searchQuery, setSearchQuery] = useState("");
+
   async function fetchTasks() {
     const response = await fetch("/api/tasks");
     const data = await response.json();
@@ -117,9 +123,10 @@ export default function Dashboard() {
   return (
     <div style={{ minHeight: "100vh", background: "#050010", color: "white", fontFamily: "system-ui, sans-serif" }}>
 
+      {/* Interactive WebGL Parallax background */}
       <ThreeBackground />
 
-      {/* Background blobs */}
+      {/* Ambient background blur spots */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
         <div style={{ position: "absolute", top: "10%", left: "5%", width: "400px", height: "400px", background: "radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)", filter: "blur(40px)" }} />
         <div style={{ position: "absolute", top: "50%", right: "5%", width: "350px", height: "350px", background: "radial-gradient(circle, rgba(236,72,153,0.1) 0%, transparent 70%)", filter: "blur(40px)" }} />
@@ -130,12 +137,47 @@ export default function Dashboard() {
         <Navbar />
 
         <div style={{ padding: "32px 40px" }}>
-          {/* Header */}
+          
+          {/* Header Row Container */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
             <div>
               <h1 style={{ fontSize: "32px", fontWeight: 900, color: "white", letterSpacing: "-1px" }}>Dashboard</h1>
               <p style={{ color: "#4b5563", fontSize: "14px", marginTop: "4px" }}>Manage and track your team's tasks</p>
             </div>
+
+            {/* Part 2: Glassmorphic Real-Time Search Bar Component Element */}
+            <div style={{ display: "flex", alignItems: "center", gap: "16px", marginLeft: "auto", marginRight: "16px" }}>
+              <div style={{ position: "relative" }}>
+                <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#4b5563", fontSize: "14px" }}>🔍</span>
+                <input
+                  type="text"
+                  placeholder="Filter tasks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.02)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    borderRadius: "12px",
+                    padding: "10px 16px 10px 38px",
+                    fontSize: "13px",
+                    color: "white",
+                    outline: "none",
+                    width: "220px",
+                    backdropFilter: "blur(10px)",
+                    transition: "all 0.2s",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.border = "1px solid rgba(124, 58, 237, 0.4)";
+                    e.currentTarget.style.boxShadow = "0 0 15px rgba(124, 58, 237, 0.15)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.border = "1px solid rgba(255, 255, 255, 0.08)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+            </div>
+
             <Link href="/create-task">
               <button
                 style={{
@@ -160,7 +202,7 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {/* Stats */}
+          {/* Metrics Overview Cards Row */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "32px", maxWidth: "600px" }}>
             {[
               { label: "Total Tasks", value: totalTasks, color: "#a78bfa", glow: "rgba(167,139,250,0.2)" },
@@ -170,22 +212,19 @@ export default function Dashboard() {
             ].map((s) => (
               <div
                 key={s.label}
+                onMouseEnter={() => setHoveredStat(s.label)}
+                onMouseLeave={() => setHoveredStat(null)}
                 style={{
                   background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  borderRadius: "16px", padding: "20px",
-                  boxShadow: `0 0 20px ${s.glow}`,
-                  transition: "all 0.2s", cursor: "default",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-4px)";
-                  e.currentTarget.style.boxShadow = `0 0 30px ${s.glow}`;
-                  e.currentTarget.style.border = `1px solid ${s.color}30`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = `0 0 20px ${s.glow}`;
-                  e.currentTarget.style.border = "1px solid rgba(255,255,255,0.06)";
+                  border: hoveredStat === s.label ? `1px solid ${s.color}30` : "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: "16px", 
+                  padding: "20px",
+                  boxShadow: hoveredStat === s.label ? `0 0 30px ${s.glow}` : `0 0 20px ${s.glow}`,
+                  transform: hoveredStat === s.label ? "translateY(-4px)" : "translateY(0)",
+                  backdropFilter: hoveredStat === s.label ? "blur(16px)" : "blur(4px)",
+                  WebkitBackdropFilter: hoveredStat === s.label ? "blur(16px)" : "blur(4px)",
+                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)", 
+                  cursor: "default",
                 }}
               >
                 <div style={{ fontSize: "28px", fontWeight: 900, color: s.color, textShadow: `0 0 20px ${s.color}` }}>{s.value}</div>
@@ -194,7 +233,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Progress bar */}
+          {/* Progress bar Tracker indicator */}
           <div style={{ marginBottom: "32px", maxWidth: "600px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
               <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: 600 }}>OVERALL PROGRESS</span>
@@ -211,7 +250,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Main */}
+          {/* Kanban Board Board Layout Wrapper */}
           <div style={{ display: "flex", gap: "24px" }}>
             {loading ? (
               <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", height: "400px" }}>
@@ -279,34 +318,58 @@ export default function Dashboard() {
                                 Drop tasks here
                               </div>
                             )}
-                            {getColumnTasks(col.id).map((task, index) => (
-                              <Draggable key={task._id} draggableId={task._id} index={index}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    style={{
-                                      ...provided.draggableProps.style,
-                                      opacity: snapshot.isDragging ? 0.85 : 1,
-                                      transform: snapshot.isDragging
-                                        ? `${provided.draggableProps.style?.transform} rotate(2deg) scale(1.02)`
-                                        : provided.draggableProps.style?.transform,
-                                      filter: snapshot.isDragging ? `drop-shadow(0 0 12px ${col.color}60)` : "none",
-                                    }}
-                                  >
-                                    <TaskCard
-                                      id={task._id}
-                                      title={task.title}
-                                      description={task.description}
-                                      priority={task.priority}
-                                      completion={task.stage === "done"}
-                                      dueDate={task.dueDate}
-                                    />
-                                  </div>
-                                )}
-                              </Draggable>
-                            ))}
+
+                            {/* Task Items Rendering Loop */}
+                            {getColumnTasks(col.id).map((task, index) => {
+                              // Part 2 Check: Processes text match comparison logic configurations
+                              const isMatch = 
+                                task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                task.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+                              return (
+                                <Draggable key={task._id} draggableId={task._id} index={index}>
+                                  {(provided, dragSnapshot) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      style={{
+                                        ...provided.draggableProps.style,
+                                        
+                                        // Part 2: If query text exists and this item isn't a match, dim down opacity
+                                        opacity: dragSnapshot.isDragging 
+                                          ? 0.9 
+                                          : searchQuery && !isMatch ? 0.15 : 1,
+                                          
+                                        transform: dragSnapshot.isDragging
+                                          ? `${provided.draggableProps.style?.transform} rotate(2.5deg) scale(1.03)`
+                                          : provided.draggableProps.style?.transform,
+                                        
+                                        // Active Drag Shadow Glow
+                                        filter: dragSnapshot.isDragging 
+                                          ? `drop-shadow(0 0 24px ${col.color})` 
+                                          : "none",
+                                        
+                                        transition: "transform 0.1s ease, filter 0.2s ease, opacity 0.2s ease",
+                                        zIndex: dragSnapshot.isDragging ? 9999 : "auto",
+                                        
+                                        // Part 2: Blocks mouse inputs on non-matching cards so they aren't draggable
+                                        pointerEvents: searchQuery && !isMatch ? "none" : "auto",
+                                      }}
+                                    >
+                                      <TaskCard
+                                        id={task._id}
+                                        title={task.title}
+                                        description={task.description}
+                                        priority={task.priority}
+                                        completion={task.stage === "done"}
+                                        dueDate={task.dueDate}
+                                      />
+                                    </div>
+                                  )}
+                                </Draggable>
+                              );
+                            })}
                             {provided.placeholder}
                           </div>
                         )}
@@ -317,7 +380,7 @@ export default function Dashboard() {
               </DragDropContext>
             )}
 
-            {/* Activity Feed */}
+            {/* Side Activity Log Container Panel */}
             <div style={{
               width: "260px", flexShrink: 0,
               background: "rgba(255,255,255,0.02)",

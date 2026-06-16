@@ -1,142 +1,142 @@
 "use client";
 
-type TaskCardProps = {
-    id: string;
-    title: string;
-    description: string;
-    priority: string;
-    completion: boolean;
-    dueDate?: string | null;
-};
+import React from "react";
 
-const TaskCard = ({ id, title, description, priority, completion, dueDate }: TaskCardProps) => {
-    const isOverdue = dueDate && !completion && new Date(dueDate) < new Date();
+interface TaskCardProps {
+  id: string;
+  title: string;
+  description: string;
+  priority: string; // "low" | "medium" | "high"
+  completion?: boolean;
+  dueDate: string | null;
+  isSyncing?: boolean; // Added for Part 4 later
+}
 
-    const priorityConfig: Record<string, { color: string; bg: string; label: string }> = {
-        high: { color: "#ef4444", bg: "rgba(239,68,68,0.08)", label: "High" },
-        medium: { color: "#f59e0b", bg: "rgba(245,158,11,0.08)", label: "Medium" },
-        low: { color: "#10b981", bg: "rgba(16,185,129,0.08)", label: "Low" },
+export default function TaskCard({
+  title,
+  description,
+  priority,
+  completion,
+  dueDate,
+  isSyncing = false,
+}: TaskCardProps) {
+  
+  // Calculate if the task is past its due date and not completed
+  const isOverdue = React.useMemo(() => {
+    if (!dueDate || completion) return false;
+    return new Date(dueDate) < new Date();
+  }, [dueDate, completion]);
+
+  // Color mapping for glassmorphic priority pill tags
+  const priorityStyles = React.useMemo(() => {
+    const p = priority?.toLowerCase();
+    if (p === "high") {
+      return {
+        bg: "rgba(239, 68, 68, 0.1)",
+        border: "1px solid rgba(239, 68, 68, 0.3)",
+        color: "#f87171",
+        textShadow: "0 0 8px rgba(239, 68, 68, 0.6)",
+      };
+    }
+    if (p === "medium") {
+      return {
+        bg: "rgba(245, 158, 11, 0.1)",
+        border: "1px solid rgba(245, 158, 11, 0.3)",
+        color: "#fbbf24",
+        textShadow: "none",
+      };
+    }
+    return {
+      bg: "rgba(59, 130, 246, 0.1)",
+      border: "1px solid rgba(59, 130, 246, 0.3)",
+      color: "#60a5fa",
+      textShadow: "none",
     };
+  }, [priority]);
 
-    const p = priorityConfig[priority.toLowerCase()] || priorityConfig.low;
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+    });
+  };
 
-    const formatDate = (date: string) => {
-        return new Date(date).toLocaleDateString("en-IN", {
-            day: "numeric", month: "short", year: "numeric",
-        });
-    };
+  return (
+    <div
+      style={{
+        background: "rgba(255, 255, 255, 0.03)",
+        border: isOverdue 
+          ? "1px solid rgba(239, 68, 68, 0.4)" 
+          : "1px solid rgba(255, 255, 255, 0.08)",
+        borderRadius: "14px",
+        padding: "16px",
+        backdropFilter: "blur(8px)",
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        boxShadow: isOverdue ? "0 0 15px rgba(239, 68, 68, 0.2)" : "none",
+        animation: isOverdue ? "pulseOverdue 2s infinite ease-in-out" : "none",
+      }}
+    >
+      {/* Injecting CSS Keyframes directly for the pulsing overdue glow animation */}
+      {isOverdue && (
+        <style dangerouslySetInnerHTML={{__html: `
+          @keyframes pulseOverdue {
+            0% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); }
+            50% { box-shadow: 0 0 22px rgba(239, 68, 68, 0.45); border-color: rgba(239, 68, 68, 0.7); }
+            100% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); }
+          }
+        `}} />
+      )}
 
-    const handleDelete = async () => {
-        if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
-
-        try {
-            const response = await fetch(`/api/tasks/${id}`, {
-                method: "DELETE",
-            });
-
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                alert("Failed to delete the task.");
-            }
-        } catch (error) {
-            console.error("Error deleting task:", error);
-        }
-    };
-
-    return (
+      {/* Syncing Engine Overlay indicator (For Optimistic Updates in Part 4) */}
+      {isSyncing && (
         <div style={{
-            background: "rgba(255,255,255,0.03)",
-            border: isOverdue ? "1px solid rgba(239,68,68,0.4)" : "1px solid rgba(255,255,255,0.07)",
-            borderRadius: "14px",
-            padding: "14px",
-            cursor: "grab",
-            transition: "all 0.2s",
-            boxShadow: isOverdue ? "0 0 12px rgba(239,68,68,0.1)" : "none",
+          position: "absolute", top: "12px", right: "12px",
+          width: "14px", height: "14px", border: "2px solid transparent",
+          borderTopColor: "#a78bfa", borderRadius: "50%",
+          animation: "spinCardLoader 0.6s linear infinite"
         }}>
-            {/* Priority Badge - Structured inside a subtle background pill */}
-            <div style={{
-                display: "inline-flex", alignItems: "center", gap: "6px",
-                background: p.bg, 
-                border: `1px solid ${p.color}20`,
-                borderRadius: "100px", padding: "4px 10px",
-                marginBottom: "12px",
-            }}>
-                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: p.color }} />
-                <span style={{ fontSize: "11px", fontWeight: 700, color: p.color, letterSpacing: "0.2px" }}>{p.label}</span>
-            </div>
-
-            {/* Title */}
-            <h3 style={{ fontSize: "14px", fontWeight: 700, color: "white", marginBottom: "8px", lineHeight: 1.4 }}>
-                {title}
-            </h3>
-
-            {/* Description */}
-            <p style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.6, marginBottom: "12px" }}>
-                {description}
-            </p>
-
-            {/* Footer row containing due date and muted delete button */}
-            <div style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: "12px",
-                paddingTop: "12px",
-                borderTop: "1px solid rgba(255,255,255,0.05)",
-            }}>
-                {dueDate ? (
-                    <div style={{
-                        display: "flex", alignItems: "center", gap: "5px",
-                        fontSize: "11px", fontWeight: 600,
-                        color: isOverdue ? "#ef4444" : "#6b7280",
-                    }}>
-                        {isOverdue ? "⚠️ Overdue:" : "📅"}
-                        {formatDate(dueDate)}
-                    </div>
-                ) : (
-                    <div style={{ fontSize: "11px", color: "#4b5563" }}>No due date</div>
-                )}
-
-                {/* Styled Delete button - Gray by default, pops red on hover */}
-                <button
-                    onClick={handleDelete}
-                    style={{
-                        background: "none",
-                        border: "none",
-                        color: "#6b7280", // Muted state color
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        padding: "3px 8px",
-                        borderRadius: "6px",
-                        transition: "all 0.2s"
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.color = "#ef4444";
-                        e.currentTarget.style.background = "rgba(239, 68, 68, 0.08)";
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.color = "#6b7280";
-                        e.currentTarget.style.background = "none";
-                    }}
-                >
-                    Delete
-                </button>
-            </div>
-
-            {/* Completed badge */}
-            {completion && (
-                <div style={{
-                    marginTop: "10px", paddingTop: "10px",
-                    borderTop: "1px solid rgba(255,255,255,0.05)",
-                    fontSize: "11px", fontWeight: 700, color: "#10b981",
-                }}>
-                    ✅ Completed
-                </div>
-            )}
+          <style dangerouslySetInnerHTML={{__html: `
+            @keyframes spinCardLoader { to { transform: rotate(360deg); } }
+          `}} />
         </div>
-    );
-};
+      )}
 
-export default TaskCard;
+      {/* Top row: Priority badge pill */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span
+          style={{
+            padding: "2px 10px",
+            borderRadius: "100px",
+            fontSize: "11px",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+            background: priorityStyles.bg,
+            border: priorityStyles.border,
+            color: priorityStyles.color,
+            textShadow: priorityStyles.textShadow,
+          }}
+        >
+          {priority || "Low"}
+        </span>
+        
+        {dueDate && (
+          <span style={{ fontSize: "11px", color: isOverdue ? "#f87171" : "#6b7280", fontWeight: 500 }}>
+            {isOverdue ? "⚠️ Overdue: " : "📅 "}
+            {formatDate(dueDate)}
+          </span>
+        )}
+      </div>
+
+      {/* Content */}
+      <div>
+        <h4 style={{ fontSize: "14px", fontWeight: 700, color: "white", marginBottom: "4px" }}>{title}</h4>
+        <p style={{ fontSize: "12px", color: "#9ca3af", lineHeight: "1.4" }}>{description}</p>
+      </div>
+    </div>
+  );
+}
