@@ -1,57 +1,94 @@
 import connectDB from "@/lib/mongodb";
-import Task from "@/models/Tasks";
-import ActivityLog from "@/models/ActivityLog";
+import mongoose from "mongoose";
+import { NextRequest } from "next/server";
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-    try {
-        await connectDB();
-        const { id } = await params;
-        const body = await request.json();
-        
-        const oldTask = await Task.findById(id);
-        const task = await Task.findByIdAndUpdate(id, body, { new: true });
+// Inline Task Schema definition matching your structure
+const TaskSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  priority: String,
+  stage: String,
+  dueDate: Date,
+});
+const Task = mongoose.models.Task || mongoose.model("Task", TaskSchema);
 
-        if (body.stage && oldTask && oldTask.stage !== body.stage) {
-            await ActivityLog.create({
-                action: "moved",
-                taskTitle: task.title,
-                from: oldTask.stage,
-                to: body.stage,
-            });
-        }
+// Inline Activity Schema definition to save logs cleanly
+const ActivitySchema = new mongoose.Schema({
+  action: String,
+  taskTitle: String,
+  from: String,
+  to: String,
+  createdAt: { type: Date, default: Date.now }
+}, { collection: 'activities' });
+const Activity = mongoose.models.Activity || mongoose.model("Activity", ActivitySchema);
 
-        return Response.json(task);
-    } catch (error) {
-        console.log(error);
-        return Response.json(
-            { message: "Failed to update task" },
-            { status: 500 }
-        );
+// ==========================================
+// PATCH: Updates task stage AND writes logs
+// ==========================================
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    await connectDB();
+    const { id } = params;
+    const body = await req.json();
+
+    // 1. Find the current task before modifying it to know its old stage status
+    const existingTask = await Task.findById(id);
+    if (!existingTask) {
+      return Response.json({ message: "Task not found" }, { status: 404 });
     }
+
+    const oldStage = existingTask.stage;
+    const newStage = body.stage;
+
+    // 2. Perform the task update in MongoDB
+    const updatedTask = await Task.findByIdAndUpdate(id, body, { new: true });
+
+    // 3. CRITICAL: Generate and save the activity feed entry if it was a drag operation
+    if (oldStage !== newStage) {
+      await Activity.create({
+        action: "moved",
+        taskTitle: existingTask.title,
+        from: oldStage,
+        to: newStage,
+        createdAt: new Date()
+      });
+    }
+
+    return Response.json(updatedTask);
+  } catch (error) {
+    console.error("PATCH Error:", error);
+    return Response.json({ message: "Failed to update task step layout" }, { status: 500 });
+  }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-    try {
-        await connectDB();
-        const { id } = await params;
-        const task = await Task.findById(id);
-        await Task.findByIdAndDelete(id);
+// ==========================================
+// DELETE: Deletes task AND adds a deletion log
+// ==========================================
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    await connectDB();
+    const { id } = params;
 
-        if (task) {
-            await ActivityLog.create({
-                action: "deleted",
-                taskTitle: task.title,
-                from: task.stage,
-                to: null,
-            });
-        }
-
-        return Response.json({ message: "Task deleted" });
-    } catch (error) {
-        console.log(error);
-        return Response.json(
-            { message: "Failed to delete task" },
-            { status: 500 }
-        );
+    const existingTask = await Task.findById(id);
+    if (!existingTask) {
+      return Response.json({ message: "Task not found" }, { status: 404 });
     }
+
+    // Delete the task doc
+    await Task.findByIdAndDelete(id);
+
+    // Create a clean deletion log tracker entry
+    await Activity.create({
+      action: "deleted",
+      taskTitle: existingTask.title,
+      from: null,
+      to: null,
+      createdAt: new Date()
+    });
+
+    return Response.json({ message: "Task deleted successfully" });
+  } catch (error) {
+    console.error("DELETE Error:", error);
+    return Response.json({ message: "Failed to delete target task document" }, { status: 500 });
+  }
 }
