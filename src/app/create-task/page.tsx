@@ -1,131 +1,176 @@
 "use client";
 
-import Navbar from '@/components/Navbar'
+import Navbar from '@/components/Navbar';
 import React, { useState } from "react";
+import { useRouter } from 'next/navigation';
 
 const CreateTask = () => {
+  const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState("low");
+  const [dueDate, setDueDate] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-const [title, setTitle] = useState("");
-const [description, setDescription] = useState("");
-const [priority, setPriority] = useState("low");
-const [dueDate, setDueDate] = useState("");
-const [generating, setGenerating] = useState(false);
-
-async function generateDescription() {
-    if (!title) {
-        alert("Enter a task title first!");
-        return;
-    }
+  async function generateDescription() {
+    if (!title) { alert("Enter a task title first!"); return; }
     setGenerating(true);
     try {
-        const response = await fetch("/api/generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, priority }),
-        });
-        const data = await response.json();
-        setDescription(data.description);
-    } catch (error) {
-        alert("Failed to generate description.");
-    } finally {
-        setGenerating(false);
-    }
-}
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, priority }),
+      });
+      const data = await response.json();
+      setDescription(data.description);
+    } catch { alert("Failed to generate description."); }
+    finally { setGenerating(false); }
+  }
 
-async function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (!title || !description) { alert("Please fill in title and description."); return; }
+    setSubmitting(true);
     try {
-        const response = await fetch("/api/tasks", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, description, priority, dueDate: dueDate || null }),
-        });
-        const data = await response.json();
-        console.log(data);
-        setTitle("");
-        setDescription("");
-        setPriority("low");
-        setDueDate("");
-        alert("Task created successfully!");
-    } catch (error) {
-        console.error("Error creating task:", error);
-        alert("Failed to create task.");
-    }
-}
+      await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description, priority, dueDate: dueDate || null }),
+      });
+      router.push("/dashboard");
+    } catch { alert("Failed to create task."); }
+    finally { setSubmitting(false); }
+  }
 
-    return (
-        <div className="min-h-screen bg-black text-white">
-            <Navbar />
-            <div className="max-w-2xl mx-auto p-6">
-                <h1 className="text-5xl font-bold mb-8 text-teal-200">Create New Task</h1>
+  const inputStyle = {
+    width: "100%", padding: "12px 16px", borderRadius: "12px",
+    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+    color: "white", fontSize: "14px", outline: "none",
+    fontFamily: "system-ui, sans-serif",
+  };
 
-                <div className="flex flex-col gap-6">
+  const labelStyle = {
+    fontSize: "13px", fontWeight: 600, color: "#9ca3af",
+    marginBottom: "8px", display: "block", letterSpacing: "0.3px",
+  };
 
-                    <div>
-                        <h3 className="text-lg font-semibold mb-2 text-gray-300">Task Title</h3>
-                        <input
-                            type="text"
-                            placeholder="Enter task name..."
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="w-full p-3 bg-gray-900 text-white border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400"
-                        />
-                    </div>
+  return (
+    <div style={{ minHeight: "100vh", background: "#030712", color: "white", fontFamily: "system-ui, sans-serif" }}>
+      <Navbar />
 
-                    <div>
-                        <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-lg font-semibold text-gray-300">Description</h3>
-                            <button
-                                onClick={generateDescription}
-                                disabled={generating}
-                                className="bg-teal-600 text-white text-sm font-bold px-4 py-1.5 rounded-lg hover:bg-teal-500 transition disabled:opacity-50"
-                            >
-                                {generating ? "Generating..." : "✨ AI Generate"}
-                            </button>
-                        </div>
-                        <textarea
-                            placeholder="Describe the task or click AI Generate..."
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            rows={4}
-                            className="w-full p-3 bg-gray-900 text-white border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400"
-                        />
-                    </div>
+      <div style={{ maxWidth: "600px", margin: "0 auto", padding: "48px 24px" }}>
 
-                    <div>
-                        <h3 className="text-lg font-semibold mb-2 text-gray-300">Priority</h3>
-                        <select
-                            value={priority}
-                            onChange={(e) => setPriority(e.target.value)}
-                            className="w-full p-3 bg-gray-900 text-white border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400"
-                        >
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <h3 className="text-lg font-semibold mb-2 text-gray-300">Due Date</h3>
-                        <input
-                            type="date"
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                            className="w-full p-3 bg-gray-900 text-white border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-400"
-                        />
-                    </div>
-
-                    <button
-                        onClick={handleSubmit}
-                        className="w-full p-3 bg-teal-500 text-black font-bold rounded-xl hover:bg-teal-400 transition"
-                    >
-                        Create Task
-                    </button>
-
-                </div>
-            </div>
+        {/* Header */}
+        <div style={{ marginBottom: "40px" }}>
+          <h1 style={{ fontSize: "32px", fontWeight: 900, color: "white", letterSpacing: "-1px", marginBottom: "8px" }}>
+            Create Task
+          </h1>
+          <p style={{ color: "#4b5563", fontSize: "14px" }}>Add a new task to your board</p>
         </div>
-    )
-}
 
-export default CreateTask
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+
+          {/* Title */}
+          <div>
+            <label style={labelStyle}>TASK TITLE</label>
+            <input
+              type="text"
+              placeholder="e.g. Design the club homepage"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <label style={{ ...labelStyle, marginBottom: 0 }}>DESCRIPTION</label>
+              <button
+                type="button"
+                onClick={generateDescription}
+                disabled={generating}
+                style={{
+                  padding: "6px 14px", borderRadius: "8px", fontSize: "12px",
+                  fontWeight: 700, color: "#000",
+                  background: generating ? "#1a3a3a" : "linear-gradient(135deg, #2dd4bf, #34d399)",
+                  border: "none", cursor: generating ? "not-allowed" : "pointer",
+                  opacity: generating ? 0.7 : 1,
+                }}
+              >
+                {generating ? "Generating..." : "✨ AI Generate"}
+              </button>
+            </div>
+            <textarea
+              placeholder="Describe the task or click AI Generate..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              style={{ ...inputStyle, resize: "vertical" }}
+            />
+          </div>
+
+          {/* Priority */}
+          <div>
+            <label style={labelStyle}>PRIORITY</label>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+              {[
+                { value: "low", label: "Low", color: "#10b981" },
+                { value: "medium", label: "Medium", color: "#f59e0b" },
+                { value: "high", label: "High", color: "#ef4444" },
+              ].map((p) => (
+                <button
+                  type="button"
+                  key={p.value}
+                  onClick={() => setPriority(p.value)}
+                  style={{
+                    padding: "10px", borderRadius: "12px", fontSize: "13px",
+                    fontWeight: 700, cursor: "pointer",
+                    background: priority === p.value ? `${p.color}20` : "rgba(255,255,255,0.03)",
+                    border: priority === p.value ? `1px solid ${p.color}60` : "1px solid rgba(255,255,255,0.06)",
+                    color: priority === p.value ? p.color : "#6b7280",
+                    transition: "all 0.15s",
+                    boxShadow: priority === p.value ? `0 0 12px ${p.color}20` : "none",
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Due Date */}
+          <div>
+            <label style={labelStyle}>DUE DATE (OPTIONAL)</label>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              style={{ ...inputStyle, colorScheme: "dark" }}
+            />
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{
+              width: "100%", padding: "14px", borderRadius: "14px",
+              fontSize: "15px", fontWeight: 800, color: "#000",
+              background: submitting ? "#1a3a3a" : "linear-gradient(135deg, #2dd4bf, #34d399)",
+              border: "none", cursor: submitting ? "not-allowed" : "pointer",
+              boxShadow: "0 0 24px rgba(45,212,191,0.25)",
+              marginTop: "8px",
+            }}
+          >
+            {submitting ? "Creating..." : "Create Task →"}
+          </button>
+
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default CreateTask;
