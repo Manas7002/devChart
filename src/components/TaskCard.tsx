@@ -9,7 +9,7 @@ interface TaskCardProps {
   priority: string; // "low" | "medium" | "high"
   completion?: boolean;
   dueDate: string | null;
-  isSyncing?: boolean; // Added for Part 4 later
+  isSyncing?: boolean; // Ready for the Optimistic UI part later!
 }
 
 export default function TaskCard({
@@ -21,13 +21,13 @@ export default function TaskCard({
   isSyncing = false,
 }: TaskCardProps) {
   
-  // Calculate if the task is past its due date and not completed
+  // Calculate if the task is past its due date and not completed yet
   const isOverdue = React.useMemo(() => {
     if (!dueDate || completion) return false;
     return new Date(dueDate) < new Date();
   }, [dueDate, completion]);
 
-  // Color mapping for glassmorphic priority pill tags
+  // Color mapping configurations for our glassmorphic priority badges
   const priorityStyles = React.useMemo(() => {
     const p = priority?.toLowerCase();
     if (p === "high") {
@@ -78,9 +78,10 @@ export default function TaskCard({
         gap: "12px",
         boxShadow: isOverdue ? "0 0 15px rgba(239, 68, 68, 0.2)" : "none",
         animation: isOverdue ? "pulseOverdue 2s infinite ease-in-out" : "none",
+        transition: "border-color 0.3s ease, box-shadow 0.3s ease",
       }}
     >
-      {/* Injecting CSS Keyframes directly for the pulsing overdue glow animation */}
+      {/* Dynamic injection of CSS Keyframes for the glowing crimson pulse */}
       {isOverdue && (
         <style dangerouslySetInnerHTML={{__html: `
           @keyframes pulseOverdue {
@@ -91,10 +92,10 @@ export default function TaskCard({
         `}} />
       )}
 
-      {/* Syncing Engine Overlay indicator (For Optimistic Updates in Part 4) */}
+      {/* Sync Loader spinner element wrapper (Ready for Part 4) */}
       {isSyncing && (
         <div style={{
-          position: "absolute", top: "12px", right: "12px",
+          position: "absolute", top: "16px", right: "16px",
           width: "14px", height: "14px", border: "2px solid transparent",
           borderTopColor: "#a78bfa", borderRadius: "50%",
           animation: "spinCardLoader 0.6s linear infinite"
@@ -105,7 +106,7 @@ export default function TaskCard({
         </div>
       )}
 
-      {/* Top row: Priority badge pill */}
+      {/* Top Meta Row: Badges & Due Date */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span
           style={{
@@ -121,7 +122,7 @@ export default function TaskCard({
             textShadow: priorityStyles.textShadow,
           }}
         >
-          {priority || "Low"}
+          {priority || "low"}
         </span>
         
         {dueDate && (
@@ -132,7 +133,7 @@ export default function TaskCard({
         )}
       </div>
 
-      {/* Content */}
+      {/* Text Context */}
       <div>
         <h4 style={{ fontSize: "14px", fontWeight: 700, color: "white", marginBottom: "4px" }}>{title}</h4>
         <p style={{ fontSize: "12px", color: "#9ca3af", lineHeight: "1.4" }}>{description}</p>
