@@ -2,6 +2,7 @@
 
 import Navbar from "@/components/Navbar";
 import TaskCard from "@/components/TaskCard";
+import ThreeBackground from "@/components/ThreeBackground";
 import React, { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import Link from "next/link";
@@ -40,6 +41,7 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredCol, setHoveredCol] = useState<string | null>(null);
 
   async function fetchTasks() {
     const response = await fetch("/api/tasks");
@@ -73,12 +75,10 @@ export default function Dashboard() {
     const task = tasks.find((t) => t._id === draggableId);
     if (!task) return;
 
-    // Update tasks locally immediately
     setTasks((prev) =>
       prev.map((t) => (t._id === draggableId ? { ...t, stage: newStage } : t))
     );
 
-    // Add log locally immediately (no waiting for DB)
     const newLog: ActivityLog = {
       _id: Date.now().toString(),
       action: "moved",
@@ -89,7 +89,6 @@ export default function Dashboard() {
     };
     setLogs((prev) => [newLog, ...prev].slice(0, 20));
 
-    // Save to DB in background
     fetch(`/api/tasks/${draggableId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -113,9 +112,12 @@ export default function Dashboard() {
   const totalTasks = tasks.length;
   const doneTasks = tasks.filter((t) => t.stage === "done").length;
   const overdueTasks = tasks.filter((t) => t.dueDate && t.stage !== "done" && new Date(t.dueDate) < new Date()).length;
+  const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
   return (
     <div style={{ minHeight: "100vh", background: "#050010", color: "white", fontFamily: "system-ui, sans-serif" }}>
+
+      <ThreeBackground />
 
       {/* Background blobs */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
@@ -135,54 +137,106 @@ export default function Dashboard() {
               <p style={{ color: "#4b5563", fontSize: "14px", marginTop: "4px" }}>Manage and track your team's tasks</p>
             </div>
             <Link href="/create-task">
-              <button style={{
-                padding: "10px 24px", borderRadius: "12px", fontSize: "14px",
-                fontWeight: 700, color: "#fff",
-                background: "linear-gradient(135deg, #7c3aed, #ec4899)",
-                border: "none", cursor: "pointer",
-                boxShadow: "0 0 24px rgba(124,58,237,0.4)",
-              }}>
+              <button
+                style={{
+                  padding: "10px 24px", borderRadius: "12px", fontSize: "14px",
+                  fontWeight: 700, color: "#fff",
+                  background: "linear-gradient(135deg, #7c3aed, #ec4899)",
+                  border: "none", cursor: "pointer",
+                  boxShadow: "0 0 24px rgba(124,58,237,0.4)",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 0 40px rgba(124,58,237,0.6)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 0 24px rgba(124,58,237,0.4)";
+                }}
+              >
                 + New Task
               </button>
             </Link>
           </div>
 
           {/* Stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "32px", maxWidth: "400px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "32px", maxWidth: "600px" }}>
             {[
               { label: "Total Tasks", value: totalTasks, color: "#a78bfa", glow: "rgba(167,139,250,0.2)" },
               { label: "Completed", value: doneTasks, color: "#2dd4bf", glow: "rgba(45,212,191,0.2)" },
               { label: "Overdue", value: overdueTasks, color: "#ef4444", glow: "rgba(239,68,68,0.2)" },
+              { label: "Progress", value: `${progress}%`, color: "#ec4899", glow: "rgba(236,72,153,0.2)" },
             ].map((s) => (
-              <div key={s.label} style={{
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                borderRadius: "16px", padding: "20px",
-                boxShadow: `0 0 20px ${s.glow}`,
-              }}>
-                <div style={{ fontSize: "32px", fontWeight: 900, color: s.color, textShadow: `0 0 20px ${s.color}` }}>{s.value}</div>
+              <div
+                key={s.label}
+                style={{
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: "16px", padding: "20px",
+                  boxShadow: `0 0 20px ${s.glow}`,
+                  transition: "all 0.2s", cursor: "default",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                  e.currentTarget.style.boxShadow = `0 0 30px ${s.glow}`;
+                  e.currentTarget.style.border = `1px solid ${s.color}30`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = `0 0 20px ${s.glow}`;
+                  e.currentTarget.style.border = "1px solid rgba(255,255,255,0.06)";
+                }}
+              >
+                <div style={{ fontSize: "28px", fontWeight: 900, color: s.color, textShadow: `0 0 20px ${s.color}` }}>{s.value}</div>
                 <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}>{s.label}</div>
               </div>
             ))}
+          </div>
+
+          {/* Progress bar */}
+          <div style={{ marginBottom: "32px", maxWidth: "600px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+              <span style={{ fontSize: "12px", color: "#6b7280", fontWeight: 600 }}>OVERALL PROGRESS</span>
+              <span style={{ fontSize: "12px", color: "#a78bfa", fontWeight: 700 }}>{progress}%</span>
+            </div>
+            <div style={{ height: "6px", background: "rgba(255,255,255,0.06)", borderRadius: "100px", overflow: "hidden" }}>
+              <div style={{
+                height: "100%", width: `${progress}%`,
+                background: "linear-gradient(90deg, #7c3aed, #ec4899, #2dd4bf)",
+                borderRadius: "100px",
+                transition: "width 0.5s ease",
+                boxShadow: "0 0 10px rgba(124,58,237,0.5)",
+              }} />
+            </div>
           </div>
 
           {/* Main */}
           <div style={{ display: "flex", gap: "24px" }}>
             {loading ? (
               <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", height: "400px" }}>
-                <p style={{ color: "#4b5563" }}>Loading tasks...</p>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "32px", marginBottom: "12px" }}>⚡</div>
+                  <p style={{ color: "#4b5563" }}>Loading tasks...</p>
+                </div>
               </div>
             ) : (
               <DragDropContext onDragEnd={onDragEnd}>
                 <div style={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
                   {COLUMNS.map((col) => (
-                    <div key={col.id} style={{
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                      borderRadius: "20px", padding: "20px",
-                      backdropFilter: "blur(10px)",
-                      boxShadow: `0 0 30px ${col.glow}15`,
-                    }}>
+                    <div
+                      key={col.id}
+                      onMouseEnter={() => setHoveredCol(col.id)}
+                      onMouseLeave={() => setHoveredCol(null)}
+                      style={{
+                        background: hoveredCol === col.id ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)",
+                        border: hoveredCol === col.id ? `1px solid ${col.color}30` : "1px solid rgba(255,255,255,0.06)",
+                        borderRadius: "20px", padding: "20px",
+                        backdropFilter: "blur(10px)",
+                        boxShadow: hoveredCol === col.id ? `0 0 40px ${col.glow}25` : `0 0 30px ${col.glow}15`,
+                        transition: "all 0.3s",
+                      }}
+                    >
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
                         <div style={{
                           width: "10px", height: "10px", borderRadius: "50%",
@@ -191,10 +245,13 @@ export default function Dashboard() {
                         }} />
                         <h2 style={{ fontSize: "15px", fontWeight: 700, color: "white" }}>{col.label}</h2>
                         <span style={{
-                          marginLeft: "auto", background: "rgba(255,255,255,0.06)",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                          color: "#6b7280", fontSize: "12px", fontWeight: 600,
+                          marginLeft: "auto",
+                          background: hoveredCol === col.id ? `${col.color}20` : "rgba(255,255,255,0.06)",
+                          border: hoveredCol === col.id ? `1px solid ${col.color}40` : "1px solid rgba(255,255,255,0.08)",
+                          color: hoveredCol === col.id ? col.color : "#6b7280",
+                          fontSize: "12px", fontWeight: 600,
                           padding: "2px 8px", borderRadius: "100px",
+                          transition: "all 0.3s",
                         }}>
                           {getColumnTasks(col.id).length}
                         </span>
@@ -207,16 +264,18 @@ export default function Dashboard() {
                             {...provided.droppableProps}
                             style={{
                               minHeight: "400px", display: "flex", flexDirection: "column", gap: "10px",
-                              background: snapshot.isDraggingOver ? `${col.glow}08` : "transparent",
+                              background: snapshot.isDraggingOver ? `${col.glow}15` : "transparent",
                               borderRadius: "12px", transition: "background 0.2s", padding: "4px",
+                              border: snapshot.isDraggingOver ? `1px dashed ${col.color}40` : "1px solid transparent",
                             }}
                           >
                             {getColumnTasks(col.id).length === 0 && (
                               <div style={{
-                                display: "flex", alignItems: "center", justifyContent: "center",
+                                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                                 height: "100px", color: "#374151", fontSize: "13px",
-                                border: "1px dashed rgba(255,255,255,0.05)", borderRadius: "12px",
+                                border: "1px dashed rgba(255,255,255,0.05)", borderRadius: "12px", gap: "8px",
                               }}>
+                                <span style={{ fontSize: "20px" }}>✦</span>
                                 Drop tasks here
                               </div>
                             )}
@@ -231,8 +290,9 @@ export default function Dashboard() {
                                       ...provided.draggableProps.style,
                                       opacity: snapshot.isDragging ? 0.85 : 1,
                                       transform: snapshot.isDragging
-                                        ? `${provided.draggableProps.style?.transform} rotate(2deg)`
+                                        ? `${provided.draggableProps.style?.transform} rotate(2deg) scale(1.02)`
                                         : provided.draggableProps.style?.transform,
+                                      filter: snapshot.isDragging ? `drop-shadow(0 0 12px ${col.color}60)` : "none",
                                     }}
                                   >
                                     <TaskCard
