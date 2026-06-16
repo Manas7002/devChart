@@ -51,123 +51,137 @@ const CreateTask = () => {
   };
 
   const labelStyle = {
-    fontSize: "13px", fontWeight: 600, color: "#9ca3af",
-    marginBottom: "8px", display: "block", letterSpacing: "0.3px",
+    fontSize: "12px", fontWeight: 700, color: "#6b7280",
+    marginBottom: "8px", display: "block", letterSpacing: "1px",
+    textTransform: "uppercase" as const,
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#030712", color: "white", fontFamily: "system-ui, sans-serif" }}>
-      <Navbar />
+    <div style={{ minHeight: "100vh", background: "#050010", color: "white", fontFamily: "system-ui, sans-serif" }}>
 
-      <div style={{ maxWidth: "600px", margin: "0 auto", padding: "48px 24px" }}>
+      {/* Background blobs */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
+        <div style={{ position: "absolute", top: "20%", left: "10%", width: "400px", height: "400px", background: "radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 70%)", filter: "blur(40px)" }} />
+        <div style={{ position: "absolute", bottom: "20%", right: "10%", width: "350px", height: "350px", background: "radial-gradient(circle, rgba(236,72,153,0.08) 0%, transparent 70%)", filter: "blur(40px)" }} />
+      </div>
 
-        {/* Header */}
-        <div style={{ marginBottom: "40px" }}>
-          <h1 style={{ fontSize: "32px", fontWeight: 900, color: "white", letterSpacing: "-1px", marginBottom: "8px" }}>
-            Create Task
-          </h1>
-          <p style={{ color: "#4b5563", fontSize: "14px" }}>Add a new task to your board</p>
-        </div>
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <Navbar />
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+        <div style={{ maxWidth: "600px", margin: "0 auto", padding: "48px 24px" }}>
 
-          {/* Title */}
-          <div>
-            <label style={labelStyle}>TASK TITLE</label>
-            <input
-              type="text"
-              placeholder="e.g. Design the club homepage"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              style={inputStyle}
-            />
+          {/* Header */}
+          <div style={{ marginBottom: "40px" }}>
+            <h1 style={{ fontSize: "36px", fontWeight: 900, letterSpacing: "-1px", marginBottom: "8px" }}>
+              Create{" "}
+              <span style={{
+                background: "linear-gradient(135deg, #a78bfa, #ec4899)",
+                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+              }}>Task</span>
+            </h1>
+            <p style={{ color: "#4b5563", fontSize: "14px" }}>Add a new task to your board</p>
           </div>
 
-          {/* Description */}
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-              <label style={{ ...labelStyle, marginBottom: 0 }}>DESCRIPTION</label>
-              <button
-                type="button"
-                onClick={generateDescription}
-                disabled={generating}
-                style={{
-                  padding: "6px 14px", borderRadius: "8px", fontSize: "12px",
-                  fontWeight: 700, color: "#000",
-                  background: generating ? "#1a3a3a" : "linear-gradient(135deg, #2dd4bf, #34d399)",
-                  border: "none", cursor: generating ? "not-allowed" : "pointer",
-                  opacity: generating ? 0.7 : 1,
-                }}
-              >
-                {generating ? "Generating..." : "✨ AI Generate"}
-              </button>
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+
+            {/* Title */}
+            <div>
+              <label style={labelStyle}>Task Title</label>
+              <input
+                type="text"
+                placeholder="e.g. Design the club homepage"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                style={inputStyle}
+              />
             </div>
-            <textarea
-              placeholder="Describe the task or click AI Generate..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              style={{ ...inputStyle, resize: "vertical" }}
-            />
-          </div>
 
-          {/* Priority */}
-          <div>
-            <label style={labelStyle}>PRIORITY</label>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
-              {[
-                { value: "low", label: "Low", color: "#10b981" },
-                { value: "medium", label: "Medium", color: "#f59e0b" },
-                { value: "high", label: "High", color: "#ef4444" },
-              ].map((p) => (
+            {/* Description */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <label style={{ ...labelStyle, marginBottom: 0 }}>Description</label>
                 <button
                   type="button"
-                  key={p.value}
-                  onClick={() => setPriority(p.value)}
+                  onClick={generateDescription}
+                  disabled={generating}
                   style={{
-                    padding: "10px", borderRadius: "12px", fontSize: "13px",
-                    fontWeight: 700, cursor: "pointer",
-                    background: priority === p.value ? `${p.color}20` : "rgba(255,255,255,0.03)",
-                    border: priority === p.value ? `1px solid ${p.color}60` : "1px solid rgba(255,255,255,0.06)",
-                    color: priority === p.value ? p.color : "#6b7280",
-                    transition: "all 0.15s",
-                    boxShadow: priority === p.value ? `0 0 12px ${p.color}20` : "none",
+                    padding: "6px 14px", borderRadius: "8px", fontSize: "12px",
+                    fontWeight: 700, color: "#000",
+                    background: generating ? "rgba(167,139,250,0.3)" : "linear-gradient(135deg, #a78bfa, #ec4899)",
+                    border: "none", cursor: generating ? "not-allowed" : "pointer",
+                    boxShadow: generating ? "none" : "0 0 12px rgba(167,139,250,0.3)",
                   }}
                 >
-                  {p.label}
+                  {generating ? "Generating..." : "✨ AI Generate"}
                 </button>
-              ))}
+              </div>
+              <textarea
+                placeholder="Describe the task or click AI Generate..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={4}
+                style={{ ...inputStyle, resize: "vertical" }}
+              />
             </div>
-          </div>
 
-          {/* Due Date */}
-          <div>
-            <label style={labelStyle}>DUE DATE (OPTIONAL)</label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              style={{ ...inputStyle, colorScheme: "dark" }}
-            />
-          </div>
+            {/* Priority */}
+            <div>
+              <label style={labelStyle}>Priority</label>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+                {[
+                  { value: "low", label: "🟢 Low", color: "#10b981" },
+                  { value: "medium", label: "🟡 Medium", color: "#f59e0b" },
+                  { value: "high", label: "🔴 High", color: "#ef4444" },
+                ].map((p) => (
+                  <button
+                    type="button"
+                    key={p.value}
+                    onClick={() => setPriority(p.value)}
+                    style={{
+                      padding: "10px", borderRadius: "12px", fontSize: "13px",
+                      fontWeight: 700, cursor: "pointer",
+                      background: priority === p.value ? `${p.color}15` : "rgba(255,255,255,0.03)",
+                      border: priority === p.value ? `1px solid ${p.color}50` : "1px solid rgba(255,255,255,0.06)",
+                      color: priority === p.value ? p.color : "#6b7280",
+                      transition: "all 0.15s",
+                      boxShadow: priority === p.value ? `0 0 16px ${p.color}20` : "none",
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={submitting}
-            style={{
-              width: "100%", padding: "14px", borderRadius: "14px",
-              fontSize: "15px", fontWeight: 800, color: "#000",
-              background: submitting ? "#1a3a3a" : "linear-gradient(135deg, #2dd4bf, #34d399)",
-              border: "none", cursor: submitting ? "not-allowed" : "pointer",
-              boxShadow: "0 0 24px rgba(45,212,191,0.25)",
-              marginTop: "8px",
-            }}
-          >
-            {submitting ? "Creating..." : "Create Task →"}
-          </button>
+            {/* Due Date */}
+            <div>
+              <label style={labelStyle}>Due Date (Optional)</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                style={{ ...inputStyle, colorScheme: "dark" }}
+              />
+            </div>
 
-        </form>
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={submitting}
+              style={{
+                width: "100%", padding: "14px", borderRadius: "14px",
+                fontSize: "15px", fontWeight: 800, color: "#fff",
+                background: submitting ? "rgba(124,58,237,0.3)" : "linear-gradient(135deg, #7c3aed, #ec4899)",
+                border: "none", cursor: submitting ? "not-allowed" : "pointer",
+                boxShadow: submitting ? "none" : "0 0 30px rgba(124,58,237,0.3)",
+                marginTop: "8px",
+              }}
+            >
+              {submitting ? "Creating..." : "Create Task →"}
+            </button>
+
+          </form>
+        </div>
       </div>
     </div>
   );

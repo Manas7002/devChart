@@ -2,22 +2,34 @@ import Link from "next/link";
 
 export default function Navbar() {
     return (
-        <nav className="flex justify-between items-center px-8 py-4 border-b border-gray-800 bg-black sticky top-0 z-50">
+        <nav style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            padding: "16px 40px", borderBottom: "1px solid rgba(255,255,255,0.06)",
+            position: "sticky", top: 0, zIndex: 50,
+            background: "rgba(5,0,16,0.8)", backdropFilter: "blur(20px)",
+        }}>
             <Link href="/">
-                <h1 className="text-2xl font-bold text-teal-300 glow-text tracking-wider">
-                    dev<span className="text-white">Chart</span>
-                </h1>
+                <div style={{ fontSize: "22px", fontWeight: 900, letterSpacing: "-0.5px", cursor: "pointer" }}>
+                    <span style={{ color: "#a78bfa" }}>dev</span>
+                    <span style={{ color: "white" }}>Chart</span>
+                </div>
             </Link>
-            <div className="flex gap-3">
+            <div style={{ display: "flex", gap: "12px" }}>
                 <Link href="/dashboard">
-                    <button className="px-4 py-2 rounded-xl text-sm font-semibold text-teal-300 border border-teal-800 hover:bg-teal-900 hover:border-teal-400 transition-all duration-200">
-                        Dashboard
-                    </button>
+                    <button style={{
+                        padding: "8px 20px", borderRadius: "12px", fontSize: "14px",
+                        fontWeight: 600, color: "#9ca3af", background: "transparent",
+                        border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer",
+                    }}>Dashboard</button>
                 </Link>
                 <Link href="/create-task">
-                    <button className="px-4 py-2 rounded-xl text-sm font-semibold bg-teal-400 text-black hover:bg-teal-300 transition-all duration-200">
-                        + Create Task
-                    </button>
+                    <button style={{
+                        padding: "8px 20px", borderRadius: "12px", fontSize: "14px",
+                        fontWeight: 700, color: "#000",
+                        background: "linear-gradient(135deg, #a78bfa, #ec4899)",
+                        border: "none", cursor: "pointer",
+                        boxShadow: "0 0 20px rgba(167,139,250,0.4)",
+                    }}>+ Create Task</button>
                 </Link>
             </div>
         </nav>
