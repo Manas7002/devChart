@@ -25,10 +25,17 @@ const Activity = mongoose.models.Activity || mongoose.model("Activity", Activity
 // ==========================================
 // PATCH: Updates task stage AND writes logs
 // ==========================================
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(
+  req: NextRequest, 
+  { params }: { params: Promise<{ id: string }> } // Updated to Promise type for Next.js 15/16
+) {
   try {
     await connectDB();
-    const { id } = params;
+    
+    // Await the params before extracting the id
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
+    
     const body = await req.json();
 
     // 1. Find the current task before modifying it to know its old stage status
@@ -43,7 +50,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     // 2. Perform the task update in MongoDB
     const updatedTask = await Task.findByIdAndUpdate(id, body, { new: true });
 
-    // 3. CRITICAL: Generate and save the activity feed entry if it was a drag operation
+    // 3. Generate and save the activity feed entry if it was a drag operation
     if (oldStage !== newStage) {
       await Activity.create({
         action: "moved",
@@ -64,10 +71,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 // ==========================================
 // DELETE: Deletes task AND adds a deletion log
 // ==========================================
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  req: NextRequest, 
+  { params }: { params: Promise<{ id: string }> } // Updated to Promise type for Next.js 15/16
+) {
   try {
     await connectDB();
-    const { id } = params;
+    
+    // Await the params before extracting the id
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
 
     const existingTask = await Task.findById(id);
     if (!existingTask) {
