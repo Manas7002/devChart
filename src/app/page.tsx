@@ -1,8 +1,11 @@
 import Link from "next/link";
+import ThreeBackground from "@/components/ThreeBackground";
 
 export default function Home() {
   return (
     <div style={{ minHeight: "100vh", background: "#050010", color: "white", fontFamily: "system-ui, sans-serif", overflow: "hidden" }}>
+
+      <ThreeBackground />
 
       {/* Navbar */}
       <nav style={{
@@ -39,9 +42,9 @@ export default function Home() {
       <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "calc(100vh - 65px)", textAlign: "center", padding: "40px 24px" }}>
 
         {/* Blobs */}
-        <div style={{ position: "absolute", top: "10%", left: "10%", width: "500px", height: "500px", background: "radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)", pointerEvents: "none", filter: "blur(40px)" }} />
-        <div style={{ position: "absolute", top: "20%", right: "10%", width: "400px", height: "400px", background: "radial-gradient(circle, rgba(236,72,153,0.15) 0%, transparent 70%)", pointerEvents: "none", filter: "blur(40px)" }} />
-        <div style={{ position: "absolute", bottom: "10%", left: "30%", width: "600px", height: "300px", background: "radial-gradient(circle, rgba(45,212,191,0.1) 0%, transparent 70%)", pointerEvents: "none", filter: "blur(60px)" }} />
+        <div style={{ position: "absolute", top: "10%", left: "10%", width: "500px", height: "500px", background: "radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)", pointerEvents: "none", filter: "blur(40px)" }} />
+        <div style={{ position: "absolute", top: "20%", right: "10%", width: "400px", height: "400px", background: "radial-gradient(circle, rgba(236,72,153,0.12) 0%, transparent 70%)", pointerEvents: "none", filter: "blur(40px)" }} />
+        <div style={{ position: "absolute", bottom: "10%", left: "30%", width: "600px", height: "300px", background: "radial-gradient(circle, rgba(45,212,191,0.08) 0%, transparent 70%)", pointerEvents: "none", filter: "blur(60px)" }} />
 
         {/* Grid */}
         <div style={{
@@ -116,7 +119,6 @@ export default function Home() {
                 background: "rgba(255,255,255,0.02)",
                 border: "1px solid rgba(255,255,255,0.06)",
                 borderRadius: "16px", padding: "20px 16px", textAlign: "left",
-                transition: "all 0.2s",
                 boxShadow: `0 0 20px ${f.color}10`,
               }}>
                 <div style={{ fontSize: "24px", marginBottom: "10px" }}>{f.icon}</div>
