@@ -73,17 +73,30 @@ export default function Dashboard() {
     if (destination.droppableId === source.droppableId) return;
 
     const newStage = destination.droppableId as Task["stage"];
+    
+    // Instantly move the task on screen so the UI feels fast and responsive
     setTasks((prev) =>
       prev.map((t) => (t._id === draggableId ? { ...t, stage: newStage } : t))
     );
 
-    await fetch(`/api/tasks/${draggableId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stage: newStage }),
-    });
+    try {
+      // Wait for the backend update to finish processing completely
+      const response = await fetch(`/api/tasks/${draggableId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stage: newStage }),
+      });
 
-    fetchLogs();
+      if (response.ok) {
+        // Give the backend a brief moment to finish saving the log document, then refresh the feed
+        setTimeout(async () => {
+          await fetchLogs();
+          await fetchTasks(); // Cleanly sync task numbers/counters
+        }, 300);
+      }
+    } catch (error) {
+      console.error("Error saving drag drop change:", error);
+    }
   }
 
   const handleClearAllLogs = async () => {
