@@ -1,4 +1,7 @@
+"use client";
+
 type TaskCardProps = {
+    id: string; // Passed down from dashboard map context
     title: string;
     description: string;
     priority: string;
@@ -6,7 +9,7 @@ type TaskCardProps = {
     dueDate?: string | null;
 };
 
-const TaskCard = ({ title, description, priority, completion, dueDate }: TaskCardProps) => {
+const TaskCard = ({ id, title, description, priority, completion, dueDate }: TaskCardProps) => {
     const isOverdue = dueDate && !completion && new Date(dueDate) < new Date();
 
     const priorityConfig: Record<string, { color: string; bg: string; label: string }> = {
@@ -21,6 +24,24 @@ const TaskCard = ({ title, description, priority, completion, dueDate }: TaskCar
         return new Date(date).toLocaleDateString("en-IN", {
             day: "numeric", month: "short", year: "numeric",
         });
+    };
+
+    const handleDelete = async () => {
+        if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+
+        try {
+            const response = await fetch(`/api/tasks/${id}`, {
+                method: "DELETE",
+            });
+
+            if (response.ok) {
+                window.location.reload(); // Re-fetch layout updates immediately
+            } else {
+                alert("Failed to delete the task.");
+            }
+        } catch (error) {
+            console.error("Error deleting task:", error);
+        }
     };
 
     return (
@@ -50,24 +71,52 @@ const TaskCard = ({ title, description, priority, completion, dueDate }: TaskCar
             </h3>
 
             {/* Description */}
-            <p style={{ fontSize: "12px", color: "#6b7280", lineHeight: 1.6, marginBottom: dueDate ? "10px" : "0" }}>
+            <p style={{ fontSize: "12px", color: "#6b7280", lineHeight: 1.6, marginBottom: "10px" }}>
                 {description}
             </p>
 
-            {/* Due date */}
-            {dueDate && (
-                <div style={{
-                    display: "flex", alignItems: "center", gap: "5px",
-                    fontSize: "11px", fontWeight: 600,
-                    color: isOverdue ? "#ef4444" : "#6b7280",
-                    marginTop: "10px",
-                    paddingTop: "10px",
-                    borderTop: "1px solid rgba(255,255,255,0.05)",
-                }}>
-                    {isOverdue ? "⚠️ Overdue:" : "📅"}
-                    {formatDate(dueDate)}
-                </div>
-            )}
+            {/* Footer row containing due date and delete layout */}
+            <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginTop: "10px",
+                paddingTop: "10px",
+                borderTop: "1px solid rgba(255,255,255,0.05)",
+            }}>
+                {dueDate ? (
+                    <div style={{
+                        display: "flex", alignItems: "center", gap: "5px",
+                        fontSize: "11px", fontWeight: 600,
+                        color: isOverdue ? "#ef4444" : "#6b7280",
+                    }}>
+                        {isOverdue ? "⚠️ Overdue:" : "📅"}
+                        {formatDate(dueDate)}
+                    </div>
+                ) : (
+                    <div style={{ fontSize: "11px", color: "#374151" }}>No due date</div>
+                )}
+
+                {/* Styled Delete button */}
+                <button
+                    onClick={handleDelete}
+                    style={{
+                        background: "none",
+                        border: "none",
+                        color: "#ef4444",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        padding: "2px 8px",
+                        borderRadius: "6px",
+                        transition: "all 0.2s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = "none"}
+                >
+                    Delete
+                </button>
+            </div>
 
             {/* Completed badge */}
             {completion && (

@@ -213,6 +213,7 @@ export default function Dashboard() {
                                   }}
                                 >
                                   <TaskCard
+                                    id={task._id} // Added id here so TaskCard knows which item to delete
                                     title={task.title}
                                     description={task.description}
                                     priority={task.priority}
