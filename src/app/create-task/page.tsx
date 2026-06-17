@@ -18,6 +18,7 @@ const CreateTask = () => {
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [aiHovered, setAiHovered] = useState(false);
   const [submitHovered, setSubmitHovered] = useState(false);
+  const [cancelHovered, setCancelHovered] = useState(false);
 
   async function generateDescription() {
     if (!title) { alert("Enter a task title first!"); return; }
@@ -39,14 +40,27 @@ const CreateTask = () => {
     if (!title || !description) { alert("Please fill in title and description."); return; }
     setSubmitting(true);
     try {
-      await fetch("/api/tasks", {
+      const response = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, priority, dueDate: dueDate || null }),
+        body: JSON.stringify({ 
+          title, 
+          description, 
+          priority, 
+          columnId: "todo", // Forces newly created cards directly into your "To Do" track
+          dueDate: dueDate ? new Date(dueDate).toISOString() : null 
+        }),
       });
+      
+      if (!response.ok) throw new Error("Creation failed");
+      
       router.push("/dashboard");
-    } catch { alert("Failed to create task."); }
-    finally { setSubmitting(false); }
+      router.refresh();
+    } catch { 
+      alert("Failed to create task."); 
+    } finally { 
+      setSubmitting(false); 
+    }
   }
 
   // Consistent dynamic layout inputs matching dashboard properties
@@ -110,7 +124,7 @@ const CreateTask = () => {
                   WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
                 }}>Task</span>
               </h1>
-              <p style={{ color: "#4b5563", fontSize: "14px" }}>Add a new task to your interactive board</p>
+              <p style={{ color: "#6b7280", fontSize: "14px" }}>Add a new task to your interactive board</p>
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -126,6 +140,7 @@ const CreateTask = () => {
                   onFocus={() => setFocusedInput("title")}
                   onBlur={() => setFocusedInput(null)}
                   style={getInputStyle("title")}
+                  required
                 />
               </div>
 
@@ -168,6 +183,7 @@ const CreateTask = () => {
                   onBlur={() => setFocusedInput(null)}
                   rows={4}
                   style={{ ...getInputStyle("description"), resize: "vertical" }}
+                  required
                 />
               </div>
 
@@ -217,34 +233,56 @@ const CreateTask = () => {
                 />
               </div>
 
-              {/* Global Submission Trigger */}
-              <button
-                type="submit"
-                disabled={submitting}
-                onMouseEnter={() => setSubmitHovered(true)}
-                onMouseLeave={() => setSubmitHovered(false)}
-                style={{
-                  width: "100%", 
-                  padding: "14px", 
-                  borderRadius: "14px",
-                  fontSize: "15px", 
-                  fontWeight: 800, 
-                  color: "#fff",
-                  background: submitting 
-                    ? "rgba(124,58,237,0.3)" 
-                    : submitHovered 
-                      ? "linear-gradient(135deg, #8b5cf6, #f43f5e)" 
-                      : "linear-gradient(135deg, #7c3aed, #ec4899)",
-                  border: "none", 
-                  cursor: submitting ? "not-allowed" : "pointer",
-                  boxShadow: submitting ? "none" : submitHovered ? "0 0 40px rgba(124,58,237,0.6)" : "0 0 24px rgba(124,58,237,0.4)",
-                  transform: submitHovered && !submitting ? "translateY(-2px)" : "translateY(0)",
-                  transition: "all 0.2s ease",
-                  marginTop: "8px",
-                }}
-              >
-                {submitting ? "Creating Custom Instance..." : "Create Task →"}
-              </button>
+              {/* Navigation Actions Row */}
+              <div style={{ display: "flex", gap: "12px", width: "100%", marginTop: "12px" }}>
+                <button
+                  type="button"
+                  onClick={() => router.push("/dashboard")}
+                  onMouseEnter={() => setCancelHovered(true)}
+                  onMouseLeave={() => setCancelHovered(false)}
+                  style={{
+                    flex: "1",
+                    padding: "14px",
+                    borderRadius: "14px",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    color: cancelHovered ? "white" : "#6b7280",
+                    background: cancelHovered ? "rgba(255,255,255,0.05)" : "transparent",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  Cancel
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  onMouseEnter={() => setSubmitHovered(true)}
+                  onMouseLeave={() => setSubmitHovered(false)}
+                  style={{
+                    flex: "2", 
+                    padding: "14px", 
+                    borderRadius: "14px",
+                    fontSize: "15px", 
+                    fontWeight: 800, 
+                    color: "#fff",
+                    background: submitting 
+                      ? "rgba(124,58,237,0.3)" 
+                      : submitHovered 
+                        ? "linear-gradient(135deg, #8b5cf6, #f43f5e)" 
+                        : "linear-gradient(135deg, #7c3aed, #ec4899)",
+                    border: "none", 
+                    cursor: submitting ? "not-allowed" : "pointer",
+                    boxShadow: submitting ? "none" : submitHovered ? "0 0 40px rgba(124,58,237,0.6)" : "0 0 24px rgba(124,58,237,0.4)",
+                    transform: submitHovered && !submitting ? "translateY(-2px)" : "translateY(0)",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  {submitting ? "Creating Custom Instance..." : "Create Task →"}
+                </button>
+              </div>
 
             </form>
           </div>
