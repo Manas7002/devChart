@@ -11,6 +11,8 @@ const CreateTask = () => {
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("low");
   const [dueDate, setDueDate] = useState("");
+  const [assignee, setAssignee] = useState(""); // New State
+  const [domain, setDomain] = useState("Technical"); // New State
   const [generating, setGenerating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -48,6 +50,8 @@ const CreateTask = () => {
           description, 
           priority, 
           columnId: "todo", // Forces newly created cards directly into your "To Do" track
+          assignee: assignee.trim() || "Unassigned", // New dynamic property
+          domain, // New dynamic property
           dueDate: dueDate ? new Date(dueDate).toISOString() : null 
         }),
       });
@@ -185,6 +189,37 @@ const CreateTask = () => {
                   style={{ ...getInputStyle("description"), resize: "vertical" }}
                   required
                 />
+              </div>
+
+              {/* Task Assignee Input */}
+              <div>
+                <label style={labelStyle}>Assignee / Responsible Team</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Hema, Design Core, Web Dev Team"
+                  value={assignee}
+                  onChange={(e) => setAssignee(e.target.value)}
+                  onFocus={() => setFocusedInput("assignee")}
+                  onBlur={() => setFocusedInput(null)}
+                  style={getInputStyle("assignee")}
+                />
+              </div>
+
+              {/* Club Domain Picker */}
+              <div>
+                <label style={labelStyle}>Club Domain</label>
+                <select
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  onFocus={() => setFocusedInput("domain")}
+                  onBlur={() => setFocusedInput(null)}
+                  style={{ ...getInputStyle("domain"), colorScheme: "dark", cursor: "pointer" }}
+                >
+                  <option value="Technical">💻 Technical</option>
+                  <option value="Design">🎨 Design</option>
+                  <option value="Management">📊 Management</option>
+                  <option value="Media">📸 Media & Publicity</option>
+                </select>
               </div>
 
               {/* Priority Radio Buttons Layer */}

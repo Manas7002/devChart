@@ -9,6 +9,8 @@ type TaskCardProps = {
   priority: string;
   completion: boolean;
   dueDate: string | null;
+  assignee?: string; // Enhanced property
+  domain?: string;   // Enhanced property
   isSyncing?: boolean;
 };
 
@@ -19,6 +21,8 @@ export default function TaskCard({
   priority,
   completion,
   dueDate,
+  assignee = "Unassigned",
+  domain = "Technical",
   isSyncing,
 }: TaskCardProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -32,7 +36,15 @@ export default function TaskCard({
     low: "#10b981",
   };
 
+  const domainColors: Record<string, string> = {
+    technical: "#3b82f6",
+    design: "#ec4899",
+    management: "#10b981",
+    media: "#f59e0b",
+  };
+
   const activeColor = priorityColors[priority.toLowerCase()] || "#6b7280";
+  const activeDomainColor = domainColors[domain.toLowerCase()] || "#a78bfa";
 
   async function handleDelete(e: React.MouseEvent) {
     e.stopPropagation();
@@ -155,13 +167,22 @@ export default function TaskCard({
     >
       {/* Top Header Row - Badge and Buttons Share This Space Equally */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-        <span style={{
-          fontSize: "10px", fontWeight: 700, textTransform: "uppercase",
-          color: activeColor, background: `${activeColor}15`,
-          padding: "4px 10px", borderRadius: "100px", border: `1px solid ${activeColor}30`
-        }}>
-          {priority}
-        </span>
+        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+          <span style={{
+            fontSize: "10px", fontWeight: 700, textTransform: "uppercase",
+            color: activeColor, background: `${activeColor}15`,
+            padding: "4px 10px", borderRadius: "100px", border: `1px solid ${activeColor}30`
+          }}>
+            {priority}
+          </span>
+          <span style={{
+            fontSize: "10px", fontWeight: 700, textTransform: "uppercase",
+            color: activeDomainColor, background: `${activeDomainColor}15`,
+            padding: "4px 10px", borderRadius: "100px", border: `1px solid ${activeDomainColor}30`
+          }}>
+            🏷️ {domain}
+          </span>
+        </div>
 
         {/* Action Panel Isolated Trigger Group */}
         <div 
@@ -217,21 +238,25 @@ export default function TaskCard({
         </p>
       </div>
 
-      {/* Footer Area - Overdue/Due Date text lives safely down here now */}
-      {dueDate && (
-        <div style={{ 
-          display: "flex", 
-          alignItems: "center", 
-          gap: "6px", 
-          fontSize: "11px", 
-          fontWeight: 600, 
-          marginTop: "4px",
-          color: isOverdue ? "#ef4444" : "#6b7280"
-        }}>
-          <span>{isOverdue ? "⚠️ Overdue: " : "📅 "}</span>
-          <span>{formatDate(dueDate)}</span>
+      {/* Footer Area - Assignee details alongside Overdue/Due Date parameters */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px", fontSize: "11px" }}>
+        <div style={{ color: "#a78bfa", fontWeight: 600 }}>
+          👤 <span style={{ color: "#9ca3af", fontWeight: 500 }}>{assignee}</span>
         </div>
-      )}
+
+        {dueDate && (
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "6px", 
+            fontWeight: 600, 
+            color: isOverdue ? "#ef4444" : "#6b7280"
+          }}>
+            <span>{isOverdue ? "⚠️ Overdue: " : "📅 "}</span>
+            <span>{formatDate(dueDate)}</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
